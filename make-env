@@ -1,0 +1,7 @@
+# APP_NAME is used to identify the application and will be used as a prefix for provisioned AWS resources
+export APP_NAME:=guerrilla-privacy
+# ENV_NAME is a short unique identifier for the instance/environment for the deployment.
+export ENV_NAME:=prod-env
+# AWS_REGION is the region identifier where you will deploy (e.g. 'us-east-1')
+export AWS_REGION:=us-east-1
+
