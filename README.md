@@ -1,15 +1,12 @@
-# NOTE TO READER
-THIS SOURCE CODE IS NOT AUTHORIZED FOR DISTRIBUTION AS IT HAS NOT UNDERGONE APPLICATION SECURITY REVIEWS. THIS CODE IS SOLELY INTENDED FOR EN.605.731.81.SP25. PLEASE CONTACT DCHISNER@AMAZON.COM FOR FURTHER QUESTIONS/UPDATES.  
+## Disclaimer 
+
+This code has **NOT** undergone an official security review and was created for a Johns Hopkins University cloud security course as a proof of concept to see if device fingerprinting techniques would pull identifiers for cloud VMs rather than client device identifiers. It is highly recommended to conduct your own security review before deploying the guerrilla privacy application. 
 
 # Guerrilla Privacy Application
 
 Today's device fingerprinting mechanisms allow entities to track users across the Web, often without end users' knowledge or consent. Device and browser fingerprinting is nearly impossible to overcome and requires a mixture of privacy-enhanced browsers, Virtual Private Networks (VPNs), and other masking techniques to reduce detection. Unfortunately, adding such protections either creates signatures of their own for fingerprinting technologies or destroys the user's accessibility to websites.
 
 We propose a new mechanism for masking one's web identity by leveraging cloud compute resources and the fundamentals of guerrilla and maneuver warfare to allow users to privately browse the Internet. By using cloud-based virtual machines (VM), the VM will be fingerprinted instead of the end-user's personal device, giving privacy back to the end user. Drawing on the concepts of constantly maneuvering to create a rapidly deteriorating situation for an enemy as taught by United States Marine Corps doctrine, we explore terminating and creating new virtual instances for browsing sessions with the expectation that a new device/browser ID is generated, making an individual end user appear as multiple entities/devices from different parts of the world. 
-
-## Disclaimer 
-
-This code has **NOT** undergone an official security review and was created for a Johns Hopkins University cloud security course as a proof of concept to see if device fingerprinting techniques would pull identifiers for cloud VMs rather than client device identifiers. It is highly recommended to conduct your own security review before deploying the guerrilla privacy application. 
 
 ## SECURITY NOTES!!
 * Ensure you update the instance security group and SNS email in the guerrilla-privacy.ts file. You can ctrl+F "//UPDATE THE IP ADDRESS" and 'UPDATE-WITH-YOUR-EMAIL@email.com' to find the security group and SNS configurations that need to be changed. 
@@ -18,7 +15,7 @@ This code has **NOT** undergone an official security review and was created for 
 ## Architecture
 
 #### Deploying the Infrastructure
-![Architecture Deployment](architecture-deployment.png) #####NEEDS TO BE UPDATED
+![Architecture Deployment](architecture-deployment.png)
 1. The first step is deploying the IaC (primary file is guerrilla-privacy.ts). Within the IaC, numerous Lambda functions are created and many of these Lambdas are only ran during initial IaC deployment. The code for the lambda functions can be found in the src/lambda directory. 
 2. When the CDK is deployed, the master key pair is stored into Parameter Store via the create_keypair.py Lambda. This allows the key pair to be utilized later to decrypt the Windows admin password and store it into Parameter Store. 
 ---The Following Lambdas Are Deployed But Not Ran---
@@ -28,7 +25,7 @@ This code has **NOT** undergone an official security review and was created for 
 5. The password_handler.py Lambda is deployed, which will be used at a later time to retrieve the EC2 Windows admin password. This function relies on the rsa-layer.zip file, which holds the libraries for rsa encryption/decryption.
 6. Once the initial deployment occurs, the below steps are followed for the remainder of the time. 
 
-![Architecture](architecture.png)
+![Architecture](Anti-Fingerprinting-Architecture.png)
 ##### NOTE: This architecture is deployed in Amazon Web Services (AWS) using the AWS Cloud Development Kit (CDK). 
 
 #### Storing of EC2 Passwords
@@ -100,7 +97,25 @@ You can look at the Makefile in the parent directory for comments on what each c
 
 ## Establishing the RDP Connection 
 - Specify the DNS name (found under AWS Management Console -> EC2 -> Load Balancing) and click to connect to the Network Load Balancer (NLB). This will load balance you to an EC2.
-- Note: you have (15) minutes to login and browse before this instance is terminated.  
+- You will be prompted for credentials to login to the EC2. At this point, you have established a RDP connection.
+- A log will be sent to CloudWatch showing that a public IP has connected to the EC2 instance. This eventually will trigger an email with the password to the EC2 to be sent to the email address specified in guerrilla-privacy.ts.
+- Use the below log in instructions to log into the EC2.
+- An example email is shown below. The last line of JSON is the instance password. Do not include the double quotes in the password. 
+```JSON
+{
+  "timestamp": "2025-03-22T01:24:39.217882",
+  "source_ip": "10.0.213.193",
+  "destination_ip": "73.123.345.567",
+  "instance_id": "i-07a5a0365b74c778f",
+  "interface_id": "eni-0cca54603032f67ba",
+  "connection_type": "RDP",
+  "nlb_dns": "guerri-RDPNL-pWFF82r3zjcQ-436b5e8da1d32598.elb.us-east-1.amazonaws.com",
+  "vpc_id": "vpc-0b72de73c41220288",
+  "eni_instance_id": "i-07a5a0365b74c778f",
+  "instance_password": "S@L5-!fYA3SkTmnzg4tSWGh4;P(rlQ$C"
+}
+```
+- Note: At the end of the workflow that sends the password to your email, you have (15) minutes to login and browse before this instance is terminated.
 
 ## Logging In 
 - Username: Administrator
@@ -115,5 +130,3 @@ There are a few free fingerprinting providers
 - https://coveryourtrackers.eff.org/
 
 The VM being created is a Windows Server OS. The region is in us-east-1 (N. Virginia). If you are using a Mac, your fingerprint via the RDP connection will show as a Windows OS and coming from AWS, rather than your Mac. Since the same AMI is used between VMs, similar fingerprint attributes should be observed between VMs. 
-
-
